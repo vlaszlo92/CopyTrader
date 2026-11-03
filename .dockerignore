@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.env
+.env.*
+k8s/
+terraform/
+docs/
+db/
+monitoring/
+*.md
+*.zip

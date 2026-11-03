@@ -1,0 +1,124 @@
+﻿@model CopyTrader.Web.Models.AdminViewModel
+@using CopyTrader.Web.Areas.Identity.Data;
+@using Microsoft.AspNetCore.Identity
+@using Newtonsoft.Json
+
+@inject SignInManager<CopyTrader.Web.Areas.Identity.Data.ApplicationUser> SignInManager
+@inject UserManager<CopyTrader.Web.Areas.Identity.Data.ApplicationUser> UserManager
+@if (User.Identity.IsAuthenticated)
+{
+    <h1>Üdv, @User.Identity.Name!</h1>
+
+    // Get the currently authenticated user
+    var user = await UserManager.GetUserAsync(User);
+
+    // Get the user's roles
+    var roles = await UserManager.GetRolesAsync(user);
+
+    <p>Jogosultság(ok): @string.Join(", ", roles)</p>
+}
+else
+{
+    <p>You are not authenticated.</p>
+}
+<head>
+    <link href="~/css/profile.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css">
+
+</head>
+<div style="background-color: #f2f2f2; text-align: center;">
+</div>
+@if (!string.IsNullOrEmpty(ViewBag.Script))
+{
+    <script>@Html.Raw(ViewBag.Script)</script>
+}
+<div class="main-panel">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-title font-weight-bold">Trader csoportok</p>
+                        <hr>
+                        <table style="margin: 0 auto;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Név</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var traderGroup in Model.TraderGroups)
+                                {
+                                    var groupRowStyle = Model.TraderGroups.IndexOf(traderGroup) % 2 == 0 ? "#fff;" : "#ddd;";
+                                    <tr style="background-color:@groupRowStyle">
+                                        <td>@traderGroup.Id</td>
+                                        <td>@traderGroup.Name</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-title font-weight-bold">API Kulcsok</p>
+                        <hr>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Id</th>
+                                        <th>Név</th>
+                                        <th>TraderGroupId</th>
+                                        <th>Trader?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @using (Html.BeginForm("UpdateTraderGroupIds", "Admin", FormMethod.Post))
+                                    {
+                                        var traderGroupsJson = JsonConvert.SerializeObject(Model.TraderGroups);
+                                        <input type="hidden" name="traderGroupsJson" value='@Html.Raw(traderGroupsJson)' />
+                                        <input type="hidden" name="UserId" value='@Model.UserId' />
+
+                                        @for (int i = 0; i < Model.Users.Count(); i++)
+                                        {
+                                            var user = Model.Users[i];
+                                            var rowStyle = i % 2 == 0 ? "#fff;" : "#ddd;";
+                                            <tr style="background-color:@rowStyle">
+                                                <td>@user.Id</td>
+                                                <td>@user.FullName</td>
+                                                <td>
+                                                    <input type="hidden" name="users[@i].Id" value="@user.Id" />
+                                                    <input type="hidden" name="users[@i].ApiKey" value="@user.ApiKey" />
+                                                    <input type="hidden" name="users[@i].FullName" value="@user.FullName" />
+                                                    <input type="hidden" name="users[@i].IsTrader" value="@(user.IsTrader ? "true" : "false")" />
+                                                    @if (user.TraderGroupId != null)
+                                                    {
+                                                        <input type="number" name="users[@i].TraderGroupId" value="@user.TraderGroupId" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="number" name="users[@i].TraderGroupId" />
+                                                    }
+                                                </td>
+                                                <td>@(user.IsTrader ? "Igen" : "Nem")</td>
+                                            </tr>
+                                        }
+                                        <tr>
+                                            <td colspan="3">
+                                                <button type="submit">Save</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

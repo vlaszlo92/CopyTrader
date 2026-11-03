@@ -1,0 +1,92 @@
+﻿@model CopyTrader.Web.Models.UserProfileViewModel
+@{
+    ViewData["Title"] = "Profilom";
+}
+<head>
+    <link href="~/css/profile.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css">
+
+</head>
+
+<div class="main-panel">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-title font-weight-bold">Felhasználó adatai</p>
+                        <hr>
+                        <ul class="about">
+                            <li class="about-items"><i class="mdi mdi-account icon-sm"></i><span class="about-item-name">Vezetéknév:</span><span class="about-item-detail">@Model.FirstName</span></li>
+                            <li class="about-items"><i class="mdi mdi-account icon-sm"></i><span class="about-item-name">Keresztnév:</span><span class="about-item-detail">@Model.LastName</span></li>
+                            <li class="about-items"><i class="mdi mdi-at icon-sm"></i><span class="about-item-name">Email:</span><span class="about-item-detail">@Model.Email</span></li>
+                            <div class="profile-info-container d-flex justify-content-center">
+                                <a href="@Url.Action("AddAPIKey", "Profile")" class="profile-info-list-item">Kulcs Hozzáadása <i class="mdi mdi-plus"></i></a>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-title font-weight-bold">API Kulcsok</p>
+                        <hr>
+                        <div style="background-color: #f2f2f2; text-align: center;">
+                            <table style="margin: 0 auto;">
+                                <thead>
+                                    <tr>
+                                        <th>Binance ID</th>
+                                        <th>Név</th>
+                                        <th>Egyenleg</th>
+                                        <th>Aktív?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.APIs.Count(); i++)
+                                    {
+                                        var userAPI = Model.APIs[i];
+                                        var rowStyle = i % 2 == 0 ? "background-color: #fff;" : "background-color: #ddd;";
+                                        <tr style="@rowStyle">
+                                            <td>@userAPI.BinanceUserId</td>
+                                            <td>@userAPI.FullName</td>
+                                            <td>@userAPI.Balance @userAPI.CurrencyType</td>
+                                            <td>@userAPI.IsActiveString()</td>
+                                            <td>
+                                                <input type="hidden" name="users[@i].BinanceUserId" value="@userAPI.BinanceUserId" />
+                                                <input type="hidden" name="users[@i].FullName" value="@userAPI.FullName" />
+                                                <input type="hidden" name="users[@i].Balance" value="@userAPI.Balance" />
+                                                <input type="hidden" name="users[@i].CurrencyType" value="@userAPI.CurrencyType" />
+                                                <input type="hidden" name="users[@i].IsActive" value="@userAPI.IsActive" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2">Összegyenleg:</td>
+                                        <td>@Model.GetSumBalanceString()</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyKey(element) {
+        const textToCopy = element.innerText;
+        navigator.clipboard.writeText(textToCopy);
+    }
+</script>
+
+<style>
+    th {
+        width: 35%;
+    }
+</style>

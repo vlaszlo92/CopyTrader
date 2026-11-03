@@ -1,0 +1,66 @@
+﻿@model CopyTrader.Web.Models.UserAPIKeyViewModel
+@{
+    var message = TempData["message"] ?? string.Empty;
+}
+<head>
+    <link href="~/css/profile.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css">
+
+</head>
+
+<script type="text/javascript">
+    var message = '@message';
+    if (message)
+        alert(message);
+</script>
+
+<div class="main-panel text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 grid-margin stretch-card mx-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-title font-weight-bold">API Kulcs hozzáadása</p>
+                        <hr>
+                        <form asp-action="AddAPIKey">
+                            <div class="form-group">
+                                <label asp-for="BinanceUserId" class="control-label">Binance Felhasználó ID</label>
+                                <input asp-for="BinanceUserId" class="form-control" />
+                                <span asp-validation-for="BinanceUserId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="FullName" class="control-label">Teljes Név</label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Key" class="control-label">API Kulcs</label>
+                                <input asp-for="Key" class="form-control" />
+                                <span asp-validation-for="Key" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Secure" class="control-label">Biztonsági Kulcs</label>
+                                <input asp-for="Secure" class="form-control" />
+                                <span asp-validation-for="Secure" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Balance" class="control-label">Egyenleg</label>
+                                <input asp-for="Balance" class="form-control" />
+                                <span asp-validation-for="Balance" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="CurrencyType" class="control-label">Valuta</label>
+                                <input asp-for="CurrencyType" class="form-control" />
+                                <span asp-validation-for="CurrencyType" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <input type="submit" value="Mentés" class="btn btn-primary" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

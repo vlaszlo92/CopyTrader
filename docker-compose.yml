@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-LocalDev_Passw0rd!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - copytrader-db-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-LocalDev_Passw0rd!}
+      APP_PASSWORD: ${COPYTRADER_APP_PASSWORD:-CopyTraderApp_Local1!}
+    volumes:
+      - ./db:/db:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        SQLCMD="/opt/mssql-tools18/bin/sqlcmd -C -b -I -S db -U sa -P $$MSSQL_SA_PASSWORD"
+        $$SQLCMD -v APP_PASSWORD="$$APP_PASSWORD" -i /db/init.sql &&
+        if [ "$$($$SQLCMD -d CopyTrader -h -1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.tables")" = "0" ]; then
+          $$SQLCMD -d CopyTrader -i /db/schema.sql
+        fi &&
+        $$SQLCMD -d CopyTrader -i /db/seed.sql
+
+volumes:
+  copytrader-db-data:

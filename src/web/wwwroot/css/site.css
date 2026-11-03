@@ -1,0 +1,72 @@
+html, body {
+    background-image: url('http://getwallpapers.com/wallpaper/full/a/5/d/544750.jpg');
+    background-size: cover;
+    font-family: 'Numans', sans-serif;
+}
+
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.main-container {
+    margin: 50px 0px;
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+.jumbotron {
+    padding: 4rem 2rem;
+    margin-bottom: 2rem;
+    background-color: #e9ecef;
+    border-radius: .3rem;
+}
+
+.content-whitepaper, .content-profile {
+    padding: 0;
+    margin: 10px 0;
+    list-style: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #777;
+}
+
+    .content-whitepaper a, .content-profile a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+.in-btn {
+    border-color: black;
+    margin: 10px 0;
+    padding: 15px;
+    min-width: 135px;
+    background-color: #F1F2F3;
+    -webkit-transition: all .5s ease-in-out;
+    -o-transition: all .5s ease-in-out;
+    transition: all .5s ease-in-out;
+}
+
+    .in-btn:hover {
+        background-color: #9E9E9E;
+        color: white;
+        -webkit-transition: all .5s ease-in-out;
+        -o-transition: all .5s ease-in-out;
+        transition: all .5s ease-in-out;
+    }
+
+.home-main-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+}
