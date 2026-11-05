@@ -1,0 +1,118 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  dotnet-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build web
+        run: dotnet build src/web/CopyTrader.Web.csproj -c Release
+      - name: Build worker
+        run: dotnet build src/trader-service/CopyTrader.Worker/CopyTrader.Worker.csproj -c Release
+
+  repo-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan repository files with Trivy
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL
+          ignore-unfixed: true
+          scanners: vuln,secret
+          exit-code: "1"
+
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Render and validate Kubernetes manifests
+        run: |
+          for name in db-admin app-connection; do
+            cp "k8s/overlays/local/${name}.env.example" "k8s/overlays/local/${name}.env"
+          done
+          kubectl kustomize --load-restrictor LoadRestrictionsNone k8s/overlays/local > /tmp/manifests.yaml
+          docker run --rm -i ghcr.io/yannh/kubeconform:v0.6.7 -strict -summary - < /tmp/manifests.yaml
+
+  images:
+    needs: [secret-scan, dotnet-build, repo-scan, manifests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: web
+            dockerfile: docker/web.Dockerfile
+          - name: worker
+            dockerfile: docker/worker.Dockerfile
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Compute image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/copytrader-${{ matrix.name }}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image (not pushed yet)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          load: true
+          pull: true
+          push: false
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          scanners: vuln
+          exit-code: "1"
+
+      - name: Push image
+        if: github.event_name == 'push'
+        run: docker push "${IMAGE}:${GITHUB_SHA}"

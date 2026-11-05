@@ -53,6 +53,22 @@ docker build -f docker/worker.Dockerfile -t copytrader-worker:dev .
 
 Build context is the repository root. The web image listens on port 8080 and serves `/healthz` (used by Kubernetes probes). The worker logs to stdout and stops cleanly on SIGTERM; if its update loop crashes (for example a missing connection string) it exits with code 1 so the failure is visible as a restart.
 
+## Local Kubernetes (kind)
+
+Requires `kind` and `kubectl`. Stop the compose database first (`docker compose down`), because the cluster runs its own SQL Server.
+
+```
+./scripts/local-up.ps1
+```
+
+The script creates the cluster, installs ingress-nginx, builds and loads the images, applies `k8s/overlays/local` and waits until everything is ready. The web is then available at `http://copytrader.localtest.me:8080`. Remove everything with `./scripts/local-down.ps1`.
+
+Local secrets are generated from `*.env.example` files into git-ignored `*.env` files. Kustomize needs `--load-restrictor LoadRestrictionsNone` because the SQL scripts live in `db/`, outside the overlay folder.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`: secret scan (gitleaks), .NET build, Trivy repository scan, Kubernetes manifest validation (kustomize and kubeconform), and a build and Trivy scan of both images. Images are pushed to GHCR tagged with the commit SHA, only from `main` and only if every earlier job passed. Actions are pinned to commit SHAs, Dependabot proposes updates.
+
 ## Build
 
 ```

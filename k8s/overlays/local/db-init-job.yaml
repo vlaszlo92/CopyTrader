@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-init
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          command: ["/bin/bash", "/db/run-init.sh"]
+          env:
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin
+                  key: MSSQL_SA_PASSWORD
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin
+                  key: APP_PASSWORD
+          volumeMounts:
+            - name: sql
+              mountPath: /db
+              readOnly: true
+      volumes:
+        - name: sql
+          configMap:
+            name: db-sql

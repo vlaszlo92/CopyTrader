@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: copytrader
+resources:
+  - ../../base
+  - db.yaml
+  - db-init-job.yaml
+secretGenerator:
+  - name: db-admin
+    envs:
+      - db-admin.env
+  - name: app-connection
+    envs:
+      - app-connection.env
+configMapGenerator:
+  - name: db-sql
+    files:
+      - ../../../db/init.sql
+      - ../../../db/schema.sql
+      - ../../../db/seed.sql
+      - ../../../db/run-init.sh

@@ -23,3 +23,6 @@ secrets.json
 .terraform/
 *.tfvars
 !*.tfvars.example
+
+# local kubernetes secrets
+k8s/overlays/local/*.env
