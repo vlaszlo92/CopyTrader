@@ -19,10 +19,15 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_COMMENTS: "false"
+      - name: Scan full git history with gitleaks
+        run: |
+          VERSION=8.24.3
+          BASE="https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}"
+          curl -sSLO "${BASE}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          curl -sSLO "${BASE}/gitleaks_${VERSION}_checksums.txt"
+          grep "gitleaks_${VERSION}_linux_x64.tar.gz" "gitleaks_${VERSION}_checksums.txt" | sha256sum -c -
+          tar xzf "gitleaks_${VERSION}_linux_x64.tar.gz" gitleaks
+          ./gitleaks detect --source . --redact --verbose --exit-code 2
 
   dotnet-build:
     runs-on: ubuntu-latest
