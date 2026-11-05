@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Binance.Net" Version="9.0.4" />
+    <PackageReference Include="Binance.Net" Version="13.8.0" />
     <PackageReference Include="Binance.Spot" Version="4.0.0" />
     <PackageReference Include="Extensions.Hosting" Version="2.3.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
